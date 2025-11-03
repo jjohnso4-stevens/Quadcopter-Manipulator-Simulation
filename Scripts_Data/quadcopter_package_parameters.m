@@ -86,7 +86,7 @@ limit_yaw      = 20;
 filtM_altitude = 0.05;
 kp_altitude    = 0.27;
 ki_altitude    = 0.07;
-kd_altitude    = 0.35;
+kd_altitude    = 0.7; %0.35
 filtD_altitude = 10000;
 limit_altitude = 10;
 

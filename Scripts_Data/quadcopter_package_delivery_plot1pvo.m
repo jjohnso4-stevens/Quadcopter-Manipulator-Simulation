@@ -103,6 +103,7 @@ hold on
 plot(simlog_t, simlog_pz, 'LineWidth', 1,'DisplayName','Meas');
 hold off
 grid on
+axis([0 225 0 7]);
 title('Pos z')
 xlabel('Time (s)')
 linkaxes(simlog_handles, 'x')
