@@ -1,7 +1,7 @@
 %% ME 635 Course Project
 %% Quad-rotor Flying Manipulator Simulation
 % James Johnson 10/22/2025
-
+%Comment
 clc; clear; close all
 
 % 1) Open project if not already open
