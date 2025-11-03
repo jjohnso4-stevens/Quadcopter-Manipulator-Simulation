@@ -2,8 +2,8 @@
 % Copyright 2021-2024 The MathWorks, Inc.
 
 % Size of the ground
-planex = 5;           % m
-planey = 5;            % m
+planex = 10;           % m
+planey = 10;            % m
 planedepth = 0.2;        % m, distance from plane to the reference frame
 
 % Battery Capacity
