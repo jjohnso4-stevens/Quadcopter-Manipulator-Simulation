@@ -74,10 +74,10 @@ switch (path_number)
         
     case 6
         waypoints = [ ...
-            0    0 150 150 150
-            0    0 0   150 150
-            0.15 6 6   6   0.14];
-        max_speed = 2;
+            0    0  0  10 10 10 10 10 10 10
+            0    10 10 10 10 10 10 0  0  0
+            0.15 10 10 1  1  10 10 10 10 0.15];
+        max_speed = 0.3;
         min_speed = 0.1;
         xApproach = [4 1];
         vApproach = 0.1;
