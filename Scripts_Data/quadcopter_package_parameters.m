@@ -2,8 +2,8 @@
 % Copyright 2021-2024 The MathWorks, Inc.
 
 % Size of the ground
-planex = 12.5;           % m
-planey = 8.5;            % m
+planex = 5;           % m
+planey = 5;            % m
 planedepth = 0.2;        % m, distance from plane to the reference frame
 
 % Battery Capacity
@@ -16,7 +16,7 @@ battery_capacity = 7.6*3;
 rho_pla   = 1.25;            % g/cm^3 
 
 % Measured drone mass
-drone_mass = 1.2726;
+drone_mass = 2; %1.2726
 %% package ground contact properties
 pkgGrndStiff  = 1000;
 pkgGrndDamp   = 300;
