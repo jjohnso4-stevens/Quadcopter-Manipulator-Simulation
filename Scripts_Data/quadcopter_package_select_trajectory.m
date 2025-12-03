@@ -1,4 +1,4 @@
-function [waypoints, timespot_spl, spline_data, spline_yaw, wayp_path_vis, obstacle_locations] = quadcopter_package_select_trajectory(path_number,varargin)
+function [waypoints, timespot_spl, spline_data, spline_yaw, wayp_path_vis, obstacle_locations, start_points, end_points, num_middle_points, obstacle_clearance, wall_clearance] = quadcopter_package_select_trajectory(path_number,varargin)
 %quadcopter_select_trajectory Obtain parameters for selected quadcopter trajectory
 %   [waypoints, timespot_spl, spline_data, spline_yaw] = quadcopter_select_trajectory(path_number)
 %   This function returns the essential parameters that define the
@@ -21,67 +21,106 @@ end
 
 switch (path_number)
     case 1
+        start_points = [
+            1    1  1;
+            1    1  1;
+            0.15 2  2];
+        end_points   = [
+            9  9  9;
+            9  9  9;
+            2  2  0.15];
+        num_middle_points = 1000;
+        obstacle_clearance = 1.0;
+        wall_clearance     = 0.5;
         obstacle_locations = [
     0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5;
     5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    -10  -10  -10  5    5    5    5    5    5    5    -10  -10  -10  5    5    5    5    5    5    5    -10  -10  -10    5    5    5    5;
     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  7.5  7.5  7.5  -10  -10  -10  7.5  7.5  7.5  7.5  8.5  8.5  8.5  -10  -10  -10  8.5  8.5  8.5  8.5  9.5  9.5  9.5  -10  -10  -10  9.5  9.5  9.5  9.5
 ];
         waypoints = [ ...
-            -2    -2 0 2 5
-            -2    -2 0 0 0
-            0.14   6 6 6 0.14];
-        max_speed = 1;
+            1    1  1  9  9  9  9  9  9  9
+            1    9  9  9  9  9  9  1  1  1
+            0.15 9  9  1  1  9  9  9  9  0.15];
+        max_speed = 0.3;
         min_speed = 0.1;
         xApproach = [4 0.5];
         vApproach = 0.1;
 
     case 2
+        start_points = [
+            1    1  1;
+            1    1  1;
+            0.15 2  2];
+        end_points   = [];
+        num_middle_points = 1000;
+        obstacle_clearance = 1.0;
+        wall_clearance     = 0.5;
         obstacle_locations = [];
-        waypoints = [...
-            -2    -2  -2  -2 -2  2  2
-            -2    -2  -2   2  2  2  2
-            0.15  6   6   6  6  6  0.15];
-        max_speed = 1;
+        waypoints = [];
+        max_speed = 0.3;
         min_speed = 0.1;
         xApproach = [2 0.5];
         vApproach = 0.1;
 
     case 3
+        start_points = [];
+        end_points   = [];
+        num_middle_points = 1000;
+        obstacle_clearance = 1.0;
+        wall_clearance     = 0.5;
         obstacle_locations = [];
         % Note: This trajectory defines the waypoints, spline data, and yaw
         % data explicitly and does not use the function to calculate the
         % target speed and yaw angle based on the path.
-        waypoints = [...
-            -2   -2    -2     -2  -2  -2 -2  -2  -2 -2 -2 -2 -2 -2
-            -2   -2    -2     -2  -2  -2 -2  -2  -2 -2 -2 -2  0  0
-            0.15 0.15   0.15   4   4   4  4   4   4  4  4  4  4  0.14];
+        waypoints = [];
         spline_data = waypoints';
         timespot_spl = [0:4:11*4 11*4+6 11*4+6+6]';
         spline_yaw   = [0 0 0 pi/4 pi/4 pi/4 0 0 0 -pi/4 -pi/4 -pi/4 -pi/4 -pi/4];
 
     case 4
+        start_points = [
+            1    1  1;
+            1    1  1;
+            0.15 2  2];
+        end_points   = [];
+        num_middle_points = 1000;
+        obstacle_clearance = 1.0;
+        wall_clearance     = 0.5;
         obstacle_locations = [];
-        waypoints = [...
-            -3.0000    0.5633    4.5492    7.7662    9.0011    7.3491    3.7145   -0.0156    2.2687    5.0000
-            -5.0000   -4.4724   -4.5758   -2.3910    1.5272    5.3013    6.5986    6.8774    9.5797    8.0000
-            0.1500    6.0000    6.0000    6.0000    6.0000    6.0000    6.0000    6.0000    6.0000    0.15];
-        max_speed = 1;
+        waypoints = [];
+        max_speed = 0.3;
         min_speed = 0.1;
         xApproach = [4 0.5];
         vApproach = 0.1;
 
     case 5
+        start_points = [
+            1    1  1;
+            1    1  1;
+            0.15 2  2];
+        end_points   = [];
+        num_middle_points = 1000;
+        obstacle_clearance = 1.0;
+        wall_clearance     = 0.5;
         obstacle_locations = [];
-        waypoints = [ ...
-            0    0 50  50 100  100 150 150 150
-            0    0  0  50  50  100 100 150 150
-            0.15 6  6   6   6    6   6   6 0.14];
-        max_speed = 2;
+        waypoints = [];
+        max_speed = 0.3;
         min_speed = 0.1;
         xApproach = [4 1];
         vApproach = 0.1;
         
     case 6
+        start_points = [
+            1    1  1;
+            1    1  1;
+            0.15 2  2];
+        end_points   = [
+            9  9  9;
+            9  9  9;
+            2  2  0.15];
+        num_middle_points = 1000;
+        obstacle_clearance = 1.0;
+        wall_clearance     = 0.5;
         obstacle_locations = [...
             2 8 5 8 2 6
             2 8 5 3 8 2
