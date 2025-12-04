@@ -22,149 +22,6 @@ end
 switch (path_number)
     case 1
         start_points = [
-            1    1  1;
-            1    1  1;
-            0.15 2  2];
-        end_points   = [
-            9  9  9;
-            9  9  9;
-            2  2  0.15];
-        num_middle_points = 1000;
-        obstacle_clearance = 1.0;
-        wall_clearance     = 0.5;
-        obstacle_locations = [
-    0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5;
-    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    -10  -10  -10  5    5    5    5    5    5    5    -10  -10  -10  5    5    5    5    5    5    5    -10  -10  -10    5    5    5    5;
-    0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  7.5  7.5  7.5  -10  -10  -10  7.5  7.5  7.5  7.5  8.5  8.5  8.5  -10  -10  -10  8.5  8.5  8.5  8.5  9.5  9.5  9.5  -10  -10  -10  9.5  9.5  9.5  9.5
-];
-
-% --- Middle waypoint generation settings ---
-middle_start = start_points(:,3);  % Start of the middle section
-middle_end   = end_points(:,1);    % End of the middle section
-
-% Force parameters
-step_size = 0.1;      % Desired travel distance per step
-k_att = 1.5;          % Attractive gain
-k_rep = 40;           % Repulsion gain
-inflation = 1.2;      % Distance at which repulsion activates
-tol = 0.05;           % Distance tolerance to goal
-max_iterations = 20000;
-max_middle_waypoints = 1000; % cap the number of middle waypoints
-
-% Wall boundaries
-xmin = wall_clearance;
-xmax = 10 - wall_clearance;
-ymin = wall_clearance;
-ymax = 10 - wall_clearance;
-zmin = wall_clearance;
-zmax = 10 - wall_clearance;
-
-% Initialize middle waypoints
-middle_waypoints = middle_start;
-current_pt = middle_start;
-
-for i = 1:max_iterations
-    % Attractive force to goal
-    F_att = k_att * (middle_end - current_pt);
-
-    % Repulsive force from obstacles
-    F_rep = zeros(3,1);
-    for k = 1:size(obstacle_locations,2)
-        obs = obstacle_locations(:,k);
-        if any(obs == -10)
-            continue; % Skip invalid obstacle points
-        end
-        diff = current_pt - obs;
-        dist = norm(diff);
-        if dist < inflation && dist > 1e-3
-            F_rep = F_rep + k_rep * (1/dist - 1/inflation) * (diff / dist^3);
-        end
-    end
-
-    % Repulsive force from walls
-    F_wall = zeros(3,1);
-    % X walls
-    if current_pt(1) - xmin < inflation
-        F_wall(1) = F_wall(1) + k_rep * (1/(current_pt(1)-xmin) - 1/inflation) / (current_pt(1)-xmin)^2;
-    elseif xmax - current_pt(1) < inflation
-        F_wall(1) = F_wall(1) - k_rep * (1/(xmax-current_pt(1)) - 1/inflation) / (xmax-current_pt(1))^2;
-    end
-    % Y walls
-    if current_pt(2) - ymin < inflation
-        F_wall(2) = F_wall(2) + k_rep * (1/(current_pt(2)-ymin) - 1/inflation) / (current_pt(2)-ymin)^2;
-    elseif ymax - current_pt(2) < inflation
-        F_wall(2) = F_wall(2) - k_rep * (1/(ymax-current_pt(2)) - 1/inflation) / (ymax-current_pt(2))^2;
-    end
-    % Z walls
-    if current_pt(3) - zmin < inflation
-        F_wall(3) = F_wall(3) + k_rep * (1/(current_pt(3)-zmin) - 1/inflation) / (current_pt(3)-zmin)^2;
-    elseif zmax - current_pt(3) < inflation
-        F_wall(3) = F_wall(3) - k_rep * (1/(zmax-current_pt(3)) - 1/inflation) / (zmax-current_pt(3))^2;
-    end
-
-    % Combine all forces
-    F_raw = F_att + F_rep + F_wall;
-
-    % Detect stagnation / local minimum
-    check_len = min(10, size(middle_waypoints,2)-1);
-    if check_len > 0 && norm(current_pt - middle_waypoints(:,end-check_len)) < 0.05
-        % Push toward goal + random nudge
-        F_raw = F_raw + 0.8*(middle_end - current_pt)/norm(middle_end - current_pt) + 0.5*(rand(3,1)-0.5);
-    end
-
-    % Tangential escape along obstacles (optional)
-    if norm(F_rep) > 1e-3
-        w = 0.5;
-        R = [0 -1 0; 1 0 0; 0 0 0];  % rotation matrix in XY plane
-        F_raw = F_raw + w * (R * F_rep);
-    end
-
-    % Normalize and take step
-    if norm(F_raw) > 1e-6
-        F = F_raw / norm(F_raw);
-        % Damp step near walls
-        wall_dist = min([current_pt(1)-xmin, xmax-current_pt(1), ...
-                         current_pt(2)-ymin, ymax-current_pt(2), ...
-                         current_pt(3)-zmin, zmax-current_pt(3)]);
-        step_actual = step_size * min(1, wall_dist/inflation);
-        next_pt = current_pt + step_actual * F;
-    else
-        next_pt = current_pt + step_size * (rand(3,1)-0.5); % nudge if stuck
-    end
-
-    % Clamp to box boundaries
-    next_pt(1) = min(max(next_pt(1), xmin), xmax);
-    next_pt(2) = min(max(next_pt(2), ymin), ymax);
-    next_pt(3) = min(max(next_pt(3), zmin), zmax);
-
-    % Store new point
-    middle_waypoints(:,end+1) = next_pt;
-    current_pt = next_pt;
-
-    % Stop if goal reached or max waypoints reached
-    if norm(current_pt - middle_end) < tol || size(middle_waypoints,2) >= max_middle_waypoints
-        break
-    end
-end
-
-% -----------------------------------------------------------
-% Final: build complete waypoint matrix
-% -----------------------------------------------------------
-waypoints = [start_points, middle_waypoints, end_points];
-
-disp('--- Waypoints ---');
-disp(waypoints');
-        
-        max_speed = 0.3;
-        min_speed = 0.1;
-        xApproach = [4 0.5];
-        vApproach = 0.1;
-
-
-
-     
-    case 2
-        start_points = [
             1    1;
             1    1;
             0.15 5];
@@ -173,16 +30,17 @@ disp(waypoints');
             9  9;
             5  0.15];
         obstacle_locations = [
-    5 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10;
-    5 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10;
-    5 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10
+    0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5  0.5  1.5  2.5  -10  -10  -10  6.5  7.5  8.5  9.5;
+    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    5    -10  -10  -10  5    5    5    5    5    5    5    -10  -10  -10  5    5    5    5    5    5    5    -10  -10  -10    5    5    5    5;
+    0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  7.5  7.5  7.5  -10  -10  -10  7.5  7.5  7.5  7.5  8.5  8.5  8.5  -10  -10  -10  8.5  8.5  8.5  8.5  9.5  9.5  9.5  -10  -10  -10  9.5  9.5  9.5  9.5
 ];
 
         % --- Path planning parameters ---
-    step_size = 0.5;                     % forward progress per waypoint
-    min_distance_to_obstacles = 1;       % clearance from obstacles (meters)
+    step_size = 0.15;                     % forward progress per waypoint
+    min_distance_to_obstacles = 1.5;       % clearance from obstacles (meters)
     box_limits = [0.5 9.5];              % bounding box limits
-    max_iters = 80;                      % maximum intermediate waypoints
+    dist_to_goal = norm(end_points(:,1) - start_points(:,2));
+max_iters = ceil(2 * dist_to_goal / step_size);                      % maximum intermediate waypoints
 
     % --- Initialize waypoint list ---
     % Include BOTH start ground and start hover
@@ -216,13 +74,28 @@ disp(waypoints');
             if all(distances >= min_distance_to_obstacles)
                 too_close = false;  % safe
             else
-                % Sideways random nudge to try avoiding obstacle
-                sideways = 0.3 * (2*rand(3,1) - 1);
-                next_pt = next_pt + sideways;
+        % ----- Replace random nudge with directed nudges -----
+        for j = 1:size(obstacle_locations,2)
+            obs_vec = next_pt - obstacle_locations(:,j);
+            dist = norm(obs_vec);
+
+            if dist < 1.0  % too close
+                nudge = 0.1 * obs_vec / dist;  % push away directly
+            elseif dist < 1.5  % moderately close
+                % perpendicular nudge
+                rand_vec = rand(3,1) - 0.5;
+                nudge_dir = rand_vec - (rand_vec'*obs_vec)*obs_vec/(dist^2);
+                nudge = 0.05 * nudge_dir / norm(nudge_dir);
+            else
+                nudge = [0;0;0];  % safe distance, no nudge
             end
 
-            safety_try = safety_try + 1;
+            next_pt = next_pt + nudge;
         end
+    end
+
+    safety_try = safety_try + 1;
+end
 
         % ---------- Keep inside box ----------
         next_pt = min(max(next_pt, box_limits(1)), box_limits(2));
@@ -232,12 +105,136 @@ disp(waypoints');
         current_pt = next_pt;
     end
 
+% --- Smooth the intermediate path (columns 3 through end-2) ---
+if size(waypoints,2) > 4   % only smooth if enough points
+    smooth_section = waypoints(:,3:end); % exclude start ground & hover
+
+    % Apply a simple moving average filter (window size = 3)
+    window = 3;
+    for dim = 1:3
+        smooth_section(dim,:) = movmean(smooth_section(dim,:), window);
+    end
+
+    % Reinsert smoothed points back into waypoint list
+    waypoints(:,3:end) = smooth_section;
+end
+
     % --- Append final hover and landing point ---
     waypoints = [waypoints end_points(:,1) end_points(:,2)];
         
         max_speed = 0.3;
         min_speed = 0.1;
-        xApproach = [4 1];
+        xApproach = [3 0.1];
+        vApproach = 0.1;
+
+
+
+     
+    case 2
+        start_points = [
+            1    1;
+            1    1;
+            0.15 5];
+        end_points   = [
+            9  9;
+            9  9;
+            5  0.15];
+        obstacle_locations = [
+    5 7 3 4 6 9 5 5 2 2 6 3 3 3 7 7 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10;
+    5 7 3 8 4 7 5 5 2 6 6 3 2 5 6 8 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10;
+    5 5 5 7 4 5 7 3 7 5 6 3 5 4 4 7 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10
+];
+
+        % --- Path planning parameters ---
+    step_size = 0.15;                     % forward progress per waypoint
+    min_distance_to_obstacles = 1.5;       % clearance from obstacles (meters)
+    box_limits = [0.5 9.5];              % bounding box limits
+    dist_to_goal = norm(end_points(:,1) - start_points(:,2));
+max_iters = ceil(2 * dist_to_goal / step_size);                      % maximum intermediate waypoints
+
+    % --- Initialize waypoint list ---
+    % Include BOTH start ground and start hover
+    waypoints = start_points;       % 1st = ground, 2nd = hover
+    current_pt = start_points(:,2); % but pathfinding starts at hover
+
+    goal_pt = end_points(:,1);      % end hover point
+
+    % --- Generate intermediate waypoints ---
+    for i = 1:max_iters
+
+        % Direction toward goal (unit vector)
+        dir_vec = goal_pt - current_pt;
+        dist_to_goal = norm(dir_vec);
+        if dist_to_goal < step_size
+            break;  % close enough to final hover
+        end
+        dir_unit = dir_vec / dist_to_goal;
+
+        % Proposed next point
+        next_pt = current_pt + step_size * dir_unit;
+
+        % ---------- Obstacle Avoidance ----------
+        too_close = true;
+        safety_try = 0;
+        while too_close && safety_try < 20
+
+            % Distance to all obstacles
+            distances = sqrt(sum((obstacle_locations - next_pt).^2, 1));
+
+            if all(distances >= min_distance_to_obstacles)
+                too_close = false;  % safe
+            else
+        % ----- Replace random nudge with directed nudges -----
+        for j = 1:size(obstacle_locations,2)
+            obs_vec = next_pt - obstacle_locations(:,j);
+            dist = norm(obs_vec);
+
+            if dist < 1.0  % too close
+                nudge = 0.1 * obs_vec / dist;  % push away directly
+            elseif dist < 1.5  % moderately close
+                % perpendicular nudge
+                rand_vec = rand(3,1) - 0.5;
+                nudge_dir = rand_vec - (rand_vec'*obs_vec)*obs_vec/(dist^2);
+                nudge = 0.05 * nudge_dir / norm(nudge_dir);
+            else
+                nudge = [0;0;0];  % safe distance, no nudge
+            end
+
+            next_pt = next_pt + nudge;
+        end
+    end
+
+    safety_try = safety_try + 1;
+end
+
+        % ---------- Keep inside box ----------
+        next_pt = min(max(next_pt, box_limits(1)), box_limits(2));
+
+        % Append waypoint
+        waypoints = [waypoints next_pt];
+        current_pt = next_pt;
+    end
+
+% --- Smooth the intermediate path (columns 3 through end-2) ---
+if size(waypoints,2) > 4   % only smooth if enough points
+    smooth_section = waypoints(:,3:end); % exclude start ground & hover
+
+    % Apply a simple moving average filter (window size = 3)
+    window = 3;
+    for dim = 1:3
+        smooth_section(dim,:) = movmean(smooth_section(dim,:), window);
+    end
+
+    % Reinsert smoothed points back into waypoint list
+    waypoints(:,3:end) = smooth_section;
+end
+
+    % --- Append final hover and landing point ---
+    waypoints = [waypoints end_points(:,1) end_points(:,2)];
+        
+        max_speed = 0.3;
+        min_speed = 0.1;
+        xApproach = [3 0.1];
         vApproach = 0.1;
 
     case 3
