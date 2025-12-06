@@ -35,21 +35,20 @@ switch (path_number)
     0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  0.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  1.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  2.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  3.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  4.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  5.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  6.5  7.5  7.5  7.5  -10  -10  -10  7.5  7.5  7.5  7.5  8.5  8.5  8.5  -10  -10  -10  8.5  8.5  8.5  8.5  9.5  9.5  9.5  -10  -10  -10  9.5  9.5  9.5  9.5
         ];
 
-        % --- Path planning parameters ---
-    step_size = 0.15;                     % forward progress per waypoint
-    min_distance_to_obstacles = 1.5;       % clearance from obstacles (meters)
-    box_limits = [0.5 9.5];              % bounding box limits
+    % Path planning parameters 
+    step_size = 0.15; % forward progress per waypoint
+    min_distance_to_obstacles = 1.5; % clearance from obstacles (meters)
+    box_limits = [0.5 9.5]; % bounding box limits
     dist_to_goal = norm(end_points(:,1) - start_points(:,2));
-max_iters = ceil(2 * dist_to_goal / step_size);                      % maximum intermediate waypoints
+    max_iters = ceil(2 * dist_to_goal / step_size); % maximum intermediate waypoints
 
-    % --- Initialize waypoint list ---
-    % Include BOTH start ground and start hover
-    waypoints = start_points;       % 1st = ground, 2nd = hover
-    current_pt = start_points(:,2); % but pathfinding starts at hover
+    % Initialize waypoint list
+    waypoints = start_points; % Include start ground and start hover
+    current_pt = start_points(:,2); % pathfinding starts at hover
 
     goal_pt = end_points(:,1);      % end hover point
 
-    % --- Generate intermediate waypoints ---
+    % Generate intermediate waypoints
     for i = 1:max_iters
 
         % Direction toward goal (unit vector)
@@ -63,41 +62,41 @@ max_iters = ceil(2 * dist_to_goal / step_size);                      % maximum i
         % Proposed next point
         next_pt = current_pt + step_size * dir_unit;
 
-        % ---------- Obstacle Avoidance ----------
+        % Obstacle Avoidance 
         too_close = true;
         safety_try = 0;
         while too_close && safety_try < 20
 
             % Distance to all obstacles
             distances = sqrt(sum((obstacle_locations - next_pt).^2, 1));
-
+    
             if all(distances >= min_distance_to_obstacles)
-                too_close = false;  % safe
+               too_close = false;  % safe
             else
-        % ----- Replace random nudge with directed nudges -----
-        for j = 1:size(obstacle_locations,2)
-            obs_vec = next_pt - obstacle_locations(:,j);
-            dist = norm(obs_vec);
-
-            if dist < 1.0  % too close
-                nudge = 0.1 * obs_vec / dist;  % push away directly
-            elseif dist < 1.5  % moderately close
-                % perpendicular nudge
-                rand_vec = rand(3,1) - 0.5;
-                nudge_dir = rand_vec - (rand_vec'*obs_vec)*obs_vec/(dist^2);
-                nudge = 0.05 * nudge_dir / norm(nudge_dir);
-            else
-                nudge = [0;0;0];  % safe distance, no nudge
+                % Replace random nudge with directed nudges
+                for j = 1:size(obstacle_locations,2)
+                    obs_vec = next_pt - obstacle_locations(:,j);
+                    dist = norm(obs_vec);
+        
+                    if dist < 1.0  % too close
+                        nudge = 0.1 * obs_vec / dist;  % push away directly
+                    elseif dist < 1.5  % moderately close
+                        % perpendicular nudge
+                        rand_vec = rand(3,1) - 0.5;
+                        nudge_dir = rand_vec - (rand_vec'*obs_vec)*obs_vec/(dist^2);
+                        nudge = 0.05 * nudge_dir / norm(nudge_dir);
+                    else
+                        nudge = [0;0;0];  % safe distance, no nudge
+                    end
+        
+                    next_pt = next_pt + nudge;
+                end
             end
-
-            next_pt = next_pt + nudge;
+    
+            safety_try = safety_try + 1;
         end
-    end
 
-    safety_try = safety_try + 1;
-end
-
-        % ---------- Keep inside box ----------
+        % Keep inside box
         next_pt = min(max(next_pt, box_limits(1)), box_limits(2));
 
         % Append waypoint
@@ -105,7 +104,7 @@ end
         current_pt = next_pt;
     end
 
-% --- Smooth the intermediate path (columns 3 through end-2) ---
+% Smooth the intermediate path (columns 3 through end-2)
 if size(waypoints,2) > 4   % only smooth if enough points
     smooth_section = waypoints(:,3:end); % exclude start ground & hover
 
@@ -119,7 +118,7 @@ if size(waypoints,2) > 4   % only smooth if enough points
     waypoints(:,3:end) = smooth_section;
 end
 
-    % --- Append final hover and landing point ---
+    % Append final hover and landing point
     waypoints = [waypoints end_points(:,1) end_points(:,2)];
         
         max_speed = 0.3;
@@ -144,23 +143,23 @@ end
     5 5 5 7 4 5 7 3 7 5 6 3 5 4 4 7 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10
         ];
 
-        % --- Path planning parameters ---
+        % Path planning parameters 
     step_size = 0.15;                     % forward progress per waypoint
     min_distance_to_obstacles = 1.5;       % clearance from obstacles (meters)
     box_limits = [0.5 9.5];              % bounding box limits
     dist_to_goal = norm(end_points(:,1) - start_points(:,2));
 max_iters = ceil(2 * dist_to_goal / step_size);                      % maximum intermediate waypoints
 
-    % --- Initialize waypoint list ---
+    % Initialize waypoint list 
     % Include BOTH start ground and start hover
     waypoints = start_points;       % 1st = ground, 2nd = hover
     current_pt = start_points(:,2); % but pathfinding starts at hover
 
     goal_pt = end_points(:,1);      % end hover point
 
-    % --- Generate intermediate waypoints ---
+    % Generate intermediate waypoints
     for i = 1:max_iters
-
+    
         % Direction toward goal (unit vector)
         dir_vec = goal_pt - current_pt;
         dist_to_goal = norm(dir_vec);
@@ -172,41 +171,41 @@ max_iters = ceil(2 * dist_to_goal / step_size);                      % maximum i
         % Proposed next point
         next_pt = current_pt + step_size * dir_unit;
 
-        % ---------- Obstacle Avoidance ----------
+        % Obstacle Avoidance 
         too_close = true;
         safety_try = 0;
-        while too_close && safety_try < 20
-
-            % Distance to all obstacles
-            distances = sqrt(sum((obstacle_locations - next_pt).^2, 1));
-
-            if all(distances >= min_distance_to_obstacles)
-                too_close = false;  % safe
-            else
-        % ----- Replace random nudge with directed nudges -----
-        for j = 1:size(obstacle_locations,2)
-            obs_vec = next_pt - obstacle_locations(:,j);
-            dist = norm(obs_vec);
-
-            if dist < 1.0  % too close
-                nudge = 0.1 * obs_vec / dist;  % push away directly
-            elseif dist < 1.5  % moderately close
-                % perpendicular nudge
-                rand_vec = rand(3,1) - 0.5;
-                nudge_dir = rand_vec - (rand_vec'*obs_vec)*obs_vec/(dist^2);
-                nudge = 0.05 * nudge_dir / norm(nudge_dir);
-            else
-                nudge = [0;0;0];  % safe distance, no nudge
+            while too_close && safety_try < 20
+    
+                % Distance to all obstacles
+                distances = sqrt(sum((obstacle_locations - next_pt).^2, 1));
+    
+                if all(distances >= min_distance_to_obstacles)
+                    too_close = false;  % safe
+                else
+                    % ----- Replace random nudge with directed nudges -----
+                    for j = 1:size(obstacle_locations,2)
+                        obs_vec = next_pt - obstacle_locations(:,j);
+                        dist = norm(obs_vec);
+            
+                        if dist < 1.0  % too close
+                            nudge = 0.1 * obs_vec / dist;  % push away directly
+                        elseif dist < 1.5  % moderately close
+                            % perpendicular nudge
+                            rand_vec = rand(3,1) - 0.5;
+                            nudge_dir = rand_vec - (rand_vec'*obs_vec)*obs_vec/(dist^2);
+                            nudge = 0.05 * nudge_dir / norm(nudge_dir);
+                        else
+                            nudge = [0;0;0];  % safe distance, no nudge
+                        end
+            
+                        next_pt = next_pt + nudge;
+                    end
+                end
+    
+                safety_try = safety_try + 1;
             end
 
-            next_pt = next_pt + nudge;
-        end
-    end
-
-    safety_try = safety_try + 1;
-end
-
-        % ---------- Keep inside box ----------
+        % Keep inside box
         next_pt = min(max(next_pt, box_limits(1)), box_limits(2));
 
         % Append waypoint
@@ -214,7 +213,7 @@ end
         current_pt = next_pt;
     end
 
-% --- Smooth the intermediate path (columns 3 through end-2) ---
+% Smooth the intermediate path (columns 3 through end-2)
 if size(waypoints,2) > 4   % only smooth if enough points
     smooth_section = waypoints(:,3:end); % exclude start ground & hover
 
@@ -228,7 +227,7 @@ if size(waypoints,2) > 4   % only smooth if enough points
     waypoints(:,3:end) = smooth_section;
 end
 
-    % --- Append final hover and landing point ---
+    % Append final hover and landing point
     waypoints = [waypoints end_points(:,1) end_points(:,2)];
         
         max_speed = 0.3;
